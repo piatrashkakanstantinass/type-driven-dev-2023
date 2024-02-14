@@ -47,13 +47,33 @@ insSort [] = []
 insSort (x :: xs) = let sorted = insSort xs in
                         insertion x sorted
 
+addRows : Num e => Vect col e -> Vect col e -> Vect col e
+addRows [] [] = []
+addRows (x :: xs) (y :: ys) = x + y :: addRows xs ys
+
 addMatrics : Num e => Vect row (Vect col e) -> 
                       Vect row (Vect col e) ->
                       Vect row (Vect col e)
+addMatrics [] [] = []
+addMatrics (x :: xs) (y :: ys) = addRows x y :: addMatrics xs ys
 
-mulMatrics : Num e => Vect n (Vect m e) ->
+mulVects : Num e => Vect n e -> Vect n e -> e
+mulVects [] [] = 0
+mulVects (x :: xs) (y :: ys) = x * y + mulVects xs ys
+
+mulRow : Num e => Vect m e -> Vect p (Vect m e) -> Vect p e
+mulRow _ [] = []
+mulRow xs (y :: ys) = mulVects xs y :: mulRow xs ys
+
+mulRows : Num e => Vect n (Vect m e) -> Vect p (Vect m e) -> Vect n (Vect p e)
+mulRows [] _ = []
+mulRows (x :: xs) ys = mulRow x ys :: mulRows xs ys
+
+mulMatrics : Num e => {p : Nat} -> Vect n (Vect m e) ->
                       Vect m (Vect p e) ->
                       Vect n (Vect p e)
+mulMatrics xs ys = mulRows xs (transpose ys)
+
 
 empties' : (n : Nat) ->  Vect n (Vect 0 e)
 empties' 0 = []
