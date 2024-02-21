@@ -114,22 +114,41 @@ getEntry pos dataStore = case integerToFin pos (size dataStore) of
                               (Just x) => Just(index x (items dataStore))
 
 
-data Command = Add String | Get Integer
+data Command = Add String | Get Integer | Search String | Quit
 
 parseCommand : String -> String -> Maybe Command
 parseCommand "add" str = Just (Add str)
 parseCommand "get" str = case all isDigit (unpack str) of
                               False => Nothing
                               True => Just (Get (cast str))
+parseCommand "search" str = Just (Search str)
+parseCommand "quit" _ = Just Quit
 parseCommand _ _ = Nothing
 
 parse : String -> Maybe Command
 parse str = case span (/= ' ') str of
                         (cmd, arg) => parseCommand cmd (ltrim arg)
 
+searchItems : Vect n String -> String -> Nat -> Maybe $ (Nat, String)
+searchItems [] _ _ = Nothing
+searchItems (x :: xs) str i = case isInfixOf str x of
+                                 False => searchItems xs str (i + 1)
+                                 True => Just (i, x)
+
+processCommand : DataStore -> Command -> Maybe (String, DataStore)
+processCommand x (Add str) = Just ("Added " ++ str ++ "\n", addToStore x str)
+processCommand x (Get i) = case getEntry i x of
+                                Nothing => Just ("Invalid index\n", x)
+                                (Just v) => Just (v ++ "\n", x)
+processCommand x (Search str) = case searchItems (items x) str 0 of
+                                     Nothing => Just ("Not found\n", x)
+                                     (Just (i, v)) => Just ("Found \"" ++ v ++ "\" at " ++ show i ++ "\n", x)
+processCommand _ Quit = Nothing
 
 processInput : DataStore -> String -> Maybe (String, DataStore)
-processInput x str = ?processInput_rhs
+processInput x str = case parse str of
+                          Nothing => Just ("Failed to parse command\n", x)
+                          (Just cmd) => processCommand x cmd
 
 -- put vienas
 -- put du
