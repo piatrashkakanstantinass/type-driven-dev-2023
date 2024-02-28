@@ -114,7 +114,7 @@ getEntry pos dataStore = case integerToFin pos (size dataStore) of
                               (Just x) => Just(index x (items dataStore))
 
 
-data Command = Add String | Get Integer | Search String | Quit
+data Command = Add String | Get Integer | Search String | Quit | Size
 
 parseCommand : String -> String -> Maybe Command
 parseCommand "add" str = Just (Add str)
@@ -123,6 +123,7 @@ parseCommand "get" str = case all isDigit (unpack str) of
                               True => Just (Get (cast str))
 parseCommand "search" str = Just (Search str)
 parseCommand "quit" _ = Just Quit
+parseCommand "size" _ = Just Size
 parseCommand _ _ = Nothing
 
 parse : String -> Maybe Command
@@ -144,6 +145,7 @@ processCommand x (Search str) = case searchItems (items x) str 0 of
                                      Nothing => Just ("Not found\n", x)
                                      (Just (i, v)) => Just ("Found \"" ++ v ++ "\" at " ++ show i ++ "\n", x)
 processCommand _ Quit = Nothing
+processCommand x Size = Just ((show $ length $ items x) ++ "\n", x)
 
 processInput : DataStore -> String -> Maybe (String, DataStore)
 processInput x str = case parse str of
