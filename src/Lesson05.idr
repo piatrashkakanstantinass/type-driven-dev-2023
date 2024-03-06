@@ -58,15 +58,17 @@ data Expr num = Val num
               | Add (Expr num) (Expr num)
               | Mul (Expr num) (Expr num)
               | Abs (Expr num)
+              | Neg (Expr num)
 
 expr : Expr Nat
-expr = Add (Val 1) (Mul (Val 4) (Abs (Val (-6))))
+expr = Add (Val 1) (Mul (Val 4) (Abs (Neg (Val 6))))
 
-eval : (Num num, Integral num, Abs num) => Expr num -> num
+eval : (Num num, Integral num, Abs num, Neg num) => Expr num -> num
 eval (Val x) = x
 eval (Add x y) = eval x + eval y
 eval (Mul x y) = eval x * eval y
 eval (Abs x) = abs (eval x)
+eval (Neg x) = -1 * (eval x)
 
 Num ty => Num (Expr ty) where
     (+) = Add
@@ -87,3 +89,31 @@ Foldable (\a => Tree a) where
             rightFold = foldr f leftFold right in
             f e rightFold
 
+-- 1. Functor Expr
+-- 2. prettyPrint
+
+Functor Expr where
+    map f (Val x) = Val (f x)
+    map f (Add x y) = Add (map f x) (map f y)
+    map f (Mul x y) = Mul (map f x) (map f y)
+    map f (Abs x) = Abs (map f x)
+    map f (Neg x) = Neg (map f x)
+
+prettyPrint: Show a => Expr a -> String
+prettyPrint (Val x) = show x
+
+prettyPrint (Add x y@(Neg _)) = "\{prettyPrint  x} + (\{prettyPrint y})"
+prettyPrint (Add x y) = "\{prettyPrint  x} + \{prettyPrint y}"
+
+prettyPrint (Mul x@(Add _ _) y@(Add _ _)) = "(\{prettyPrint x}) * (\{prettyPrint y})"
+prettyPrint (Mul x@(Add _ _) y) = "(\{prettyPrint x}) * \{prettyPrint y}"
+prettyPrint (Mul x y@(Add _ _)) = "\{prettyPrint x} * (\{prettyPrint y})"
+prettyPrint (Mul x y@(Neg _)) = "\{prettyPrint  x} * (\{prettyPrint y})" -- more cases
+prettyPrint (Mul x y) = "\{prettyPrint x} * \{prettyPrint y}"
+
+prettyPrint (Abs x) = "|\{prettyPrint x}|"
+prettyPrint (Neg (Val x)) = "-\{show x}"
+prettyPrint (Neg x@(Abs _)) = "-\{prettyPrint x}"
+prettyPrint (Neg x) = "-(\{prettyPrint x})"
+
+fix : Expr a -> Expr a
