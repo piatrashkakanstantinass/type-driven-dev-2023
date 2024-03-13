@@ -117,3 +117,11 @@ prettyPrint (Neg x@(Abs _)) = "-\{prettyPrint x}"
 prettyPrint (Neg x) = "-(\{prettyPrint x})"
 
 fix : Expr a -> Expr a
+fix x @ (Val _) = x
+fix (Add x y) = Add (fix x) (fix y)
+fix (Mul x y) = Mul (fix x) (fix y)
+fix (Abs (Abs x)) = Abs $ fix x
+fix (Abs (Neg x)) = Abs $ fix x
+fix (Abs x) = Abs $ fix x
+fix (Neg (Neg x)) = fix x
+fix (Neg x) = Neg $ fix x

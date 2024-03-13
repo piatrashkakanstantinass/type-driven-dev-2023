@@ -57,3 +57,11 @@ myReverseProof xs = rewrite (plusCommutative 1 len) in xs
 myReverse' : {n: Nat} -> Vect n e -> Vect n e
 myReverse' [] = []
 myReverse' (x :: xs) = myReverseProof (myReverse' xs ++ [x])
+
+myPlusCommutes : (n : Nat) -> (m : Nat) -> n + m = m + n
+myPlusCommutes 0 m = rewrite plusZeroRightNeutral m in Refl
+myPlusCommutes (S k) m = rewrite sym $ plusSuccRightSucc m k in (rewrite plusSuccRightSucc k m in myPlusCommutes k (S m))
+
+myReverseAcc : (vec: Vect n e) -> (acc : Vect m e) -> Vect (n + m) e
+myReverseAcc [] acc = acc
+myReverseAcc {n = S len} (x :: xs) acc = rewrite plusSuccRightSucc len m in myReverseAcc xs (x :: acc)
