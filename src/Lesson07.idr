@@ -39,10 +39,11 @@ zeroNotSucc Refl impossible
 succNotZero : S k = 0 -> Void
 succNotZero Refl impossible
 
-noRec : (k = j -> Void) -> S k = S j -> Void
-noRec f Refl = f Refl
+no' : (S k = S j) -> k = j
+no' Refl = Refl
 
---no' : (S k = S j) -> k = j
+noRec : (k = j -> Void) -> S k = S j -> Void
+noRec f c = f (no' c)
 
 checkEqNat : (num1 : Nat) -> (num2 : Nat) -> Dec (num1 = num2)
 checkEqNat 0 0 = Yes Refl
@@ -66,3 +67,31 @@ void (S k) = void k
 
 void' : Void
 void' = believe_me 0
+
+-- headUnequal : DecEq a => (xs : Vect n a) -> (ys: Vect n a) -> (contr : (x=y) -> Void) -> ((x :: xs) = (y :: ys) -> Void)
+-- tailUnequal : DecEq a => (xs : Vect n a) -> (ys: Vect n a) -> (contr : (xs = ys) -> Void) -> ((x :: xs) = (y :: ys) -> Void)
+
+headUnequal : DecEq a => (xs : Vect n a) -> (ys: Vect n a) -> (contr : (x=y) -> Void) -> ((x :: xs) = (y :: ys) -> Void)
+headUnequal xs ys contr prf = contr $ cong head prf
+
+tailUnequal : DecEq a => (xs : Vect n a) -> (ys: Vect n a) -> (contr : (xs = ys) -> Void) -> ((x :: xs) = (y :: ys) -> Void)
+tailUnequal xs ys contr prf = contr $ cong tail prf
+
+data Vec : (len : Nat) -> (elem : Type) -> Type where
+    Nil : Vec 0 elem
+    (::) : (x: elem) -> (xs : Vec len elem) -> Vec (S len) elem
+
+headUnequalVec : DecEq a => (xs : Vec n a) -> (ys: Vec n a) -> (contr : (x=y) -> Void) -> ((x :: xs) = (y :: ys) -> Void)
+headUnequalVec xs xs contr Refl = contr Refl
+
+tailUnequalVec : DecEq a => (xs : Vec n a) -> (ys: Vec n a) -> (contr : (xs = ys) -> Void) -> ((x :: xs) = (y :: ys) -> Void)
+tailUnequalVec xs xs contr Refl = contr Refl
+
+
+DecEq a => DecEq (Vec n a) where
+    decEq [] [] = Yes Refl
+    decEq (x :: xs) (y :: ys) = case decEq x y of
+                                     (Yes Refl) => case decEq xs ys of
+                                                       (Yes Refl) => Yes Refl
+                                                       (No contra) => No $ tailUnequalVec xs ys contra
+                                     (No contra) => No $ headUnequalVec xs ys contra
