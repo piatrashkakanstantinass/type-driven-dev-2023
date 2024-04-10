@@ -2,6 +2,7 @@ module Lesson09
 
 import Data.List
 import Data.List.Views
+import Data.Nat
 
 %default total
 
@@ -93,3 +94,50 @@ mergeSort'' input with (splitRec input)
   mergeSort'' [x] | (SplitRecOne x) = [x]
   mergeSort'' (lefts ++ rights) | (SplitRecPair lefts rights lrec rrec)
     = merge (mergeSort'' lefts | lrec) (mergeSort'' rights | rrec)
+
+-- data TakeN : List a -> Type where
+--   Fewer : TakeN xs
+--   Exact : (n_xs : List a) -> {rest : _} -> TakeN (n_xs :: rest)
+
+-- takeN : (n : Nat) -> (xs : List a) -> TakeN xs
+
+-- groupBy : (n : Nat) -> (xs : List a) -> List (List a)
+
+-- halves : List a -> (List a, List a)
+
+-- data TakeN : List a -> Type where
+--   Fewer : TakeN xs
+--   Exact : (n_xs : List a) -> {rest : _} -> TakeN (n_xs ++ rest)
+
+-- takeN : (n : Nat) -> (xs : List a) -> TakeN xs
+-- takeN 0 xs = Exact []
+-- takeN (S k) [] = Fewer
+-- takeN (S k) (x :: xs) = case takeN k xs of
+--                              Fewer => Fewer
+--                              (Exact n_xs) => Exact (x :: n_xs)
+
+-- covering
+-- groupBy : (n : Nat) -> (xs : List a) -> List (List a)
+-- groupBy n xs with (takeN n xs)
+--   groupBy n [] | Fewer = []
+--   groupBy n xs | Fewer = [xs]
+--   groupBy 0 (n_xs ++ rest) | (Exact n_xs) = []
+--   groupBy n (n_xs ++ rest) | (Exact n_xs) = n_xs :: groupBy n rest
+
+-- halves : List a -> (List a, List a)
+-- halves xs = let
+--   half_size = (length xs) `div` 2
+--   in case takeN half_size xs of
+--           Fewer => ([], []) -- IMPOSSIBLE
+--           (Exact n_xs {rest}) => (n_xs, rest)
+
+-- data TakeN : List a -> Type where
+--   Fewer : TakeN xs
+--   Exact : (xs : _) -> (n_xs : TakeN xs) -> (rest : _) -> TakeN (xs ++ rest)
+
+-- takeN : (n : Nat) -> (xs : List a) -> TakeN xs
+-- takeN 0 xs = Exact [] Fewer xs
+-- takeN (S k) [] = Fewer
+-- takeN (S k) (x :: xs) = case takeN k xs of
+--                       Fewer => Fewer
+--                       (Exact ys n_xs rest) => ?i (Exact (x :: ys) n_xs rest)
