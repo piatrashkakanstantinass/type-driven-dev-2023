@@ -141,3 +141,24 @@ mergeSort'' input with (splitRec input)
 -- takeN (S k) (x :: xs) = case takeN k xs of
 --                       Fewer => Fewer
 --                       (Exact ys n_xs rest) => ?i (Exact (x :: ys) n_xs rest)
+
+data TakeN : List a -> Type where
+  Fewer : TakeN xs
+  Exact : (xs : List a) -> {rest : List a} -> TakeN rest -> TakeN (xs ++ rest)
+
+takeNHelper : (n : Nat) -> (xs : List a) -> (fuel : List a) -> TakeN xs
+takeNHelper 0 _ _ = Exact [] Fewer
+takeNHelper _ [] _ = Fewer
+takeNHelper _ _ [] = Fewer
+takeNHelper n @ (S k) (y :: xs) (x :: ys) = case takeNHelper k xs ys of
+                                             Fewer => Fewer
+                                             (Exact zs {rest} z) => Exact (y :: zs) (takeNHelper n rest ys)
+
+takeN : (n : Nat) -> (xs : List a) -> TakeN xs
+takeN n xs = takeNHelper n xs xs
+
+groupBy : (n : Nat) -> (xs : List a) -> List (List a)
+groupBy n xs with (takeN n xs)
+  groupBy _ [] | Fewer = []
+  groupBy _ xs | Fewer = [xs]
+  groupBy n (ys ++ rest) | (Exact ys y) = ys :: groupBy n rest | y
