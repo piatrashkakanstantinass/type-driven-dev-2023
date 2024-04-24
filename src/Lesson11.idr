@@ -135,12 +135,47 @@ namespace MaxAsPredicate
 
 namespace MaxAsSo
 
+    help2 : {k : _} -> So (not (not k)) -> So k
+    help2 {k = False} x = x
+    help2 {k = True} x = x
+
+    help4 : {a, b : _} -> So (compareNat a b == LT) -> So (compareNat b a == GT)
+    help4 {a = 0} {b = 0} x = x
+    help4 {a = 0} {b = (S k)} x = x
+    help4 {a = (S k)} {b = 0} x = x
+    help4 {a = (S k)} {b = (S j)} x = help4 x
+
+    help1 : {a, b : _} -> So (not (not (compareNat a b == LT))) -> So (compareNat b a == GT)
+    help1 x = help4 (help2 x)
+
     max5 : (a : Nat) -> (b : Nat) -> (m : Nat ** Either (m = a, So (m >= b)) (m = b, So (m > a)))
     max5 a b = case choose (a >= b) of
                     (Left x) => (a ** Left (Refl, x))
-                    (Right x) => ?max5_rhs_1
+                    (Right x) => (b ** Right (Refl, help1 x))
 
     data Maax : Type where
         Maa0 : Maax -> Maax
 
+P : a -> Type
 
+Q : a -> Type
+
+i1 : (x : Type) -> (P x -> P x)
+i1 x y = y
+
+P2 : Nat -> Type
+
+Q2 : Nat -> Type
+
+i2 : (x : Nat ** (P2 x, Q2 x) -> ((y : Nat ** P2 y),(z : Nat ** P2 z)))
+i2 = (0 ** \arg => ((0 ** fst arg), (0 ** fst arg)))
+
+i3 : (n : Nat ** ((m : Nat) -> LTE n m))
+i3 = (0 ** \m => LTEZero)
+
+i4 : (n : Nat) -> (m : Nat ** LTE n m)
+i4 0 = (1 ** LTEZero)
+i4 (S k) = let (fst ** snd) = i4 k in (S fst ** LTESucc snd)
+
+i5 : (n : Nat) -> (m : Nat ** GTE n m)
+i5 n = (0 ** LTEZero)
