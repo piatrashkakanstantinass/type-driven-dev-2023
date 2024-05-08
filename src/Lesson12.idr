@@ -146,3 +146,25 @@ quizInf (x :: y :: z) score =
                     quizInf z (score + 1)
             else do putStrLn ("Wrong, the answer is " ++ show (x * y))
                     quizInf z score
+
+everyOther : Stream a -> Stream a
+everyOther (x :: (z :: w)) = x :: everyOther w
+
+data Face = Heads | Tails
+
+coinFlips : (count : Nat) -> Stream Int -> List Face
+coinFlips 0 xs = []
+coinFlips (S k) (x :: y) with (divides x 2)
+  coinFlips (S k) (((2 * div) + rem) :: y) | (DivBy div rem prf) =
+    let face = if rem == 0 then Heads else Tails
+    in face :: coinFlips k y
+
+sqrtApprox : (num : Double) -> (approx : Double) -> Stream Double
+sqrtApprox num approx = let approx' = (approx + (num / approx)) / 2
+    in approx' :: sqrtApprox num approx'
+
+sqrtBounded : (max : Nat) -> (num : Double) -> (bound : Double) -> (approxs : Stream Double) -> Double
+sqrtBounded 0 num bound approxs = head approxs
+sqrtBounded (S k) num bound (x :: y) = case abs (x * x - num) < bound of
+                                           False => sqrtBounded k num bound y
+                                           True => x
