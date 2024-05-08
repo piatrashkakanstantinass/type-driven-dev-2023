@@ -186,3 +186,15 @@ sqrtBounded 0 num bound approxs = head approxs
 sqrtBounded (S k) num bound (x :: y) = case abs (x * x - num) < bound of
                                            False => sqrtBounded k num bound y
                                            True => x
+
+data DelayedExecution = DelayedExec Int (Int -> Int)
+
+genSeries : DelayedExecution
+genSeries = DelayedExec 0 (\arg => arg + 1)
+
+next : DelayedExecution -> (Int, DelayedExecution)
+next (DelayedExec i f) = (i, DelayedExec (f i) f)
+
+takeDel : Nat -> DelayedExecution -> List Int
+takeDel 0 x = []
+takeDel (S k) x = let (v, n) = next x in (v :: takeDel k n)
