@@ -92,6 +92,7 @@ quiz (x :: y :: z) score =
 
 data InfIO : Type where
     Do : IO a -> (a -> Inf InfIO) -> InfIO
+    Exit : IO a -> InfIO
 
 total
 loopPrint : String -> InfIO
@@ -101,6 +102,9 @@ covering
 run : InfIO -> IO ()
 run (Do act cnt) = do res <- act
                       run (cnt res)
+run (Exit act) = do
+    _ <- act
+    pure ()
 
 
 data Fuel = Dry | More Fuel
@@ -115,6 +119,10 @@ run' : Fuel -> InfIO -> IO ()
 run' Dry _ = putStrLn "Astalavista"
 run' (More fu) (Do act cnt) = do res <- act
                                  run' fu (cnt res)
+run' (More fu) (Exit act) =
+    do
+        _ <- act
+        pure ()
 
 data Gas = Empty | Full (Lazy Gas)
 
@@ -128,6 +136,10 @@ runOnGas : Gas -> InfIO -> IO ()
 runOnGas Empty _ = putStrLn "Astalavista"
 runOnGas (Full fu) (Do act cnt) = do res <- act
                                      runOnGas fu (cnt res)
+runOnGas (Full _) (Exit act) =
+    do
+        _ <- act
+        pure ()
 
 (>>=) : IO a -> (a -> Inf InfIO) -> InfIO
 (>>=) = Do
@@ -135,17 +147,23 @@ runOnGas (Full fu) (Do act cnt) = do res <- act
 (>>) : IO a -> Inf InfIO -> InfIO
 x >> y = Do x (\z => y)
 
+exitInfIO : IO a -> InfIO
+exitInfIO x = Exit x
+
 total
 quizInf: Stream Int -> (score : Nat) -> InfIO
 quizInf (x :: y :: z) score =
     do  putStrLn ("Score so far: " ++ show score)
         putStr (show x ++ " * " ++ show y ++ "?")
         answer <- getLine
-        if cast answer == x * y
+        if answer == "exit" then exitInfIO (putStrLn "Bye") else (if cast answer == x * y
             then do putStrLn "Correct!"
                     quizInf z (score + 1)
             else do putStrLn ("Wrong, the answer is " ++ show (x * y))
-                    quizInf z score
+                    quizInf z score)
+covering
+quizGameOnGas : IO ()
+quizGameOnGas = run (quizInf [1..] 0)
 
 everyOther : Stream a -> Stream a
 everyOther (x :: (z :: w)) = x :: everyOther w
