@@ -72,11 +72,31 @@ execIO (More fu) vec (Do act nxt) = do (res, vec') <- runIO vec act
 
 data StackInput = Number Integer | Add
 
-strToInput : String -> StackInput
+strToInput : String -> Maybe StackInput
+strToInput "" = Nothing
+strToInput "add" = Just Add
+strToInput str = if all isDigit (unpack str)
+                 then Just (Number (cast str))
+                 else Nothing
 
 mutual
+    tryAdd : {h : Nat} -> StackIO h
+    tryAdd {h = S (S h)} = do   doAdd
+                                res <- Top
+                                PutStr (show res ++ "\n")
+                                stackCalc
+    tryAdd = do PutStr "At least 2 elements needed"
+                stackCalc
+
     stackCalc : {h : Nat} -> StackIO h
     stackCalc = do  PutStr "> "
                     inp <- GetStr
                     case strToInput inp of
-                        val => ?asd
+                        Nothing => do PutStr "Bad input\n"; stackCalc
+                        (Just (Number i)) => do Push i; stackCalc
+                        (Just Add) => tryAdd
+
+covering
+stackMain : IO ()
+stackMain = execIO  forever [] stackCalc
+
