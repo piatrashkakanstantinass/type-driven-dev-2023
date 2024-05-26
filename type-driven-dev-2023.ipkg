@@ -3,5 +3,7 @@ package type-driven-dev-2023
 version = 0.1.0
 main = Main
 
+depends = linear
+
 executable = "type-driven-dev-2023"
 sourcedir = "src"
